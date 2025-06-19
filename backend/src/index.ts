@@ -1,23 +1,15 @@
+import { generatePoem } from "./services/claude";
+
 require('dotenv').config();
-import Anthropic from "@anthropic-ai/sdk";
 
-
-const anthropic = new Anthropic();
-
-
-async function main() {
-    const msg = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 20000,
-        temperature: 1,
-        messages: [
-            {
-                role: "user",
-                content: "Write a poem about the beauty of nature."
-            }
-        ]
-    });
-    console.log(msg);
-}
-
-main();
+generatePoem("Write a poem about the beauty of nature")
+    .then(response => {
+        console.log("Generated Poem:", response);
+    })
+    .catch(error => {
+        console.error("Error generating poem:", error);
+    })
+    .finally(() => {
+        console.log("Poem generation process completed.");
+    }
+    );
