@@ -10,30 +10,34 @@ import { FileSystemProvider } from './context/FileSystemContext';
 import { ChatProvider } from './context/ChatContext';
 import { EditorProvider } from './context/EditorContext';
 
+
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [layout, setLayout] = useState<'split' | 'preview' | 'code'>('split');
+  const [files, setFiles] = useState<any[]>([]);
+  const [isUpdating, setIsUpdating] = useState(false);
+
 
   return (
     <FileSystemProvider>
       <ChatProvider>
         <EditorProvider>
           <div className="h-screen bg-gray-900 text-white overflow-hidden">
-            <Header 
+            <Header
               sidebarOpen={sidebarOpen}
               onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
               layout={layout}
               onLayoutChange={setLayout}
             />
-            
+
             <div className="flex h-[calc(100vh-64px)]">
               {/* Chat Section - 1/3 width */}
-              <div className="w-1/3 border-r border-gray-700 flex flex-col">
-                <div className="flex-1">
-                  <ChatInterface />
+              <div className="flex w-1/2 h-full border-r border-gray-700">
+                <div className="flex-1 h-full">
+                  <ChatInterface setFiles={setFiles} setIsUpdating={setIsUpdating} />
                 </div>
-                
+
                 {/* File Explorer in Chat */}
                 <AnimatePresence>
                   {sidebarOpen && (
@@ -41,9 +45,9 @@ function App() {
                       initial={{ height: 0 }}
                       animate={{ height: 'auto' }}
                       exit={{ height: 0 }}
-                      className="border-t border-gray-700 max-h-80 overflow-hidden"
+                      className="border-t border-gray-700 overflow-hidden"
                     >
-                      <Sidebar />
+                      <Sidebar files={files} isUpdating={isUpdating} />
                     </motion.div>
                   )}
                 </AnimatePresence>

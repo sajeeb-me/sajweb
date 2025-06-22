@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Folder, 
-  FolderOpen, 
-  File, 
-  ChevronRight, 
+import {
+  Folder,
+  FolderOpen,
+  File,
+  ChevronRight,
   ChevronDown,
   Plus,
   Search,
   FileText,
   Image,
   Code,
-  Settings
+  Settings,
+  Loader2
 } from 'lucide-react';
 import { useFileSystem } from '../context/FileSystemContext';
 
-const Sidebar: React.FC = () => {
-  const { files, currentFile, setCurrentFile, createFile, createFolder } = useFileSystem();
+const Sidebar: React.FC = ({ files, isUpdating }) => {
+  const { currentFile, setCurrentFile, createFile, createFolder } = useFileSystem();
+  console.log("files from sidebar.tsx:", files);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['src']));
 
@@ -59,7 +61,7 @@ const Sidebar: React.FC = () => {
     return items.map((item) => {
       const fullPath = path ? `${path}/${item.name}` : item.name;
       const isExpanded = expandedFolders.has(fullPath);
-      
+
       if (item.type === 'folder') {
         return (
           <div key={fullPath}>
@@ -91,9 +93,8 @@ const Sidebar: React.FC = () => {
           <motion.div
             key={fullPath}
             whileHover={{ backgroundColor: 'rgba(75, 85, 99, 0.3)' }}
-            className={`flex items-center space-x-2 px-2 py-1.5 cursor-pointer rounded-md ml-6 text-sm ${
-              currentFile === fullPath ? 'bg-purple-600/20 border-l-2 border-purple-500' : ''
-            }`}
+            className={`flex items-center space-x-2 px-2 py-1.5 cursor-pointer rounded-md ml-6 text-sm ${currentFile === fullPath ? 'bg-purple-600/20 border-l-2 border-purple-500' : ''
+              }`}
             onClick={() => setCurrentFile(fullPath)}
           >
             {getFileIcon(item.name)}
@@ -107,6 +108,15 @@ const Sidebar: React.FC = () => {
   };
 
   return (
+    // <>
+    //   {!files ?
+    //     <div>
+    //       <div className="flex items-center justify-center h-full">
+    //         <Loader2 className="animate-spin text-gray-400" size={24} />
+    //       </div>
+    //       <p className="text-center text-gray-500">Loading files...</p>
+    //     </div>
+    //     :
     <div className="h-full bg-gray-800 border-t border-gray-700">
       <div className="p-3 border-b border-gray-700">
         <div className="flex items-center justify-between mb-3">
@@ -136,9 +146,11 @@ const Sidebar: React.FC = () => {
       </div>
 
       <div className="p-2 space-y-1 overflow-y-auto max-h-60">
-        {renderFileTree(files)}
+        {!isUpdating ? renderFileTree(files) : <Loader2 className="animate-spin" />}
       </div>
     </div>
+    //   }
+    // </>
   );
 };
 

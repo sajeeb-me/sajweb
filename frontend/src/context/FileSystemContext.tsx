@@ -90,6 +90,7 @@ createRoot(document.getElementById('root')!).render(
   }
 ];
 
+
 export const FileSystemProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [files, setFiles] = useState<FileItem[]>(initialFiles);
   const [currentFile, setCurrentFile] = useState<string | null>('src/App.tsx');
@@ -97,13 +98,13 @@ export const FileSystemProvider: React.FC<{ children: ReactNode }> = ({ children
   const findFile = (path: string, items: FileItem[] = files): FileItem | null => {
     const parts = path.split('/');
     let current: any = { children: items };
-    
+
     for (const part of parts) {
       if (!current.children) return null;
       current = current.children.find((item: FileItem) => item.name === part);
       if (!current) return null;
     }
-    
+
     return current;
   };
 
@@ -133,11 +134,11 @@ export const FileSystemProvider: React.FC<{ children: ReactNode }> = ({ children
   const getItemPath = (target: FileItem, items: FileItem[], currentPath = ''): string => {
     for (const item of items) {
       const fullPath = currentPath ? `${currentPath}/${item.name}` : item.name;
-      
+
       if (item === target) {
         return fullPath;
       }
-      
+
       if (item.type === 'folder' && item.children) {
         const found = getItemPath(target, item.children, fullPath);
         if (found) return found;

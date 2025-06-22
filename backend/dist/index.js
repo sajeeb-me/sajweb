@@ -18,9 +18,11 @@ const express_1 = __importDefault(require("express"));
 const prompts_1 = require("./prompts");
 const node_1 = require("./defaults/node");
 const react_1 = require("./defaults/react");
+const cors_1 = __importDefault(require("cors"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+app.use((0, cors_1.default)()); // Enable CORS for all routes
 const anthropic = new sdk_1.default({
     apiKey: process.env.ANTHROPIC_API_KEY,
 });
@@ -68,7 +70,7 @@ app.post('/chat', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const response = yield anthropic.messages.create({
         messages: messages,
         model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 1024,
+        max_tokens: 2000,
         system: (0, prompts_1.getSystemPrompt)()
     });
     console.log('Response from /chat:', response.content);

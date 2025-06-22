@@ -5,12 +5,13 @@ import { BASE_PROMPT, getSystemPrompt } from "./prompts";
 import { TextBlock } from "@anthropic-ai/sdk/resources/messages";
 import { basePrompt as nodeBasePrompt } from "./defaults/node";
 import { basePrompt as reactBasePrompt } from "./defaults/react";
-import fs from 'fs';
+import cors from 'cors';
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use(cors()); // Enable CORS for all routes
 
 const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
@@ -62,7 +63,7 @@ app.post('/chat', async (req, res) => {
     const response = await anthropic.messages.create({
         messages: messages,
         model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 1024,
+        max_tokens: 2000,
         system: getSystemPrompt()
     })
     console.log('Response from /chat:', response.content);
