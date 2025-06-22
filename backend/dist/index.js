@@ -16,6 +16,8 @@ const sdk_1 = __importDefault(require("@anthropic-ai/sdk"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const express_1 = __importDefault(require("express"));
 const prompts_1 = require("./prompts");
+const node_1 = require("./defaults/node");
+const react_1 = require("./defaults/react");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
@@ -35,10 +37,44 @@ app.post('/template', (req, res) => __awaiter(void 0, void 0, void 0, function* 
             }
         ],
         model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 1024,
-        system: (0, prompts_1.getSystemPrompt)(),
+        max_tokens: 200,
+        // system: getSystemPrompt(),
+        system: "Return either node or react based on what do you think this project should be. Only return a single word, either 'node' or 'react'. Do not return anything else.",
     });
-    res.send(response);
+    const answer = response.content[0].text; // react or node
+    console.log('Response from /template:', answer);
+    if (answer == "react") {
+        res.json({
+            prompts: [prompts_1.BASE_PROMPT, `Here is an artifact that contains all files of the project visible to you.\nConsider the contents of ALL files in the project.\n\n${react_1.basePrompt}\n\nHere is a list of files that exist on the file system but are not being shown to you:\n\n  - .gitignore\n  - package-lock.json\n`],
+            uiPrompts: [react_1.basePrompt]
+        });
+        return;
+    }
+    if (answer == "node") {
+        res.json({
+            prompts: [`Here is an artifact that contains all files of the project visible to you.\nConsider the contents of ALL files in the project.\n\n${node_1.basePrompt}\n\nHere is a list of files that exist on the file system but are not being shown to you:\n\n  - .gitignore\n  - package-lock.json\n`],
+            uiPrompts: [node_1.basePrompt]
+        });
+        return;
+    }
+    res.status(403).json({
+        error: 'Invalid response from AI. Expected "react" or "node".'
+    });
+    return;
+}));
+app.post('/chat', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const messages = req.body.messages;
+    const response = yield anthropic.messages.create({
+        messages: messages,
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 1024,
+        system: (0, prompts_1.getSystemPrompt)()
+    });
+    console.log('Response from /chat:', response.content);
+    res.json({
+        response: (_a = response.content[0]) === null || _a === void 0 ? void 0 : _a.text
+    });
 }));
 app.listen(3000, () => {
     console.log('Server is running on http://localhost:3000');
