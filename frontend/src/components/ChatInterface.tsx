@@ -52,6 +52,12 @@ const ChatInterface: React.FC = ({ setFiles, setIsUpdating }) => {
         console.log("response from template endpoint: ", firstResponse);
         const { prompts, uiPrompts } = firstResponse.data;
 
+        // const decoded = uiPrompts[0].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+        // const parsedFiles = parser(decoded); // Parse the first UI prompt to extract files
+        // setFiles(parsedFiles); // Update files in the context
+        // console.log("parsed files from template endpoint: ", parsedFiles);
+
+
         axios.post(`${BACKEND_URL}/chat`, {
           messages: [...prompts, input.trim()].map(content => ({
             role: 'user',
@@ -69,6 +75,7 @@ const ChatInterface: React.FC = ({ setFiles, setIsUpdating }) => {
 
           console.log("response from chatInterface.tsx: ", response)
           const output = parser(response.data.response);
+          // setFiles(prev => [...prev, ...output]); // Update files in the context
           setFiles(output); // Update files in the context
           console.log("output from parser: ", output);
           // const botMessage = response.data.response;
@@ -92,6 +99,7 @@ const ChatInterface: React.FC = ({ setFiles, setIsUpdating }) => {
 
         console.log("response from chatInterface.tsx: ", stepResponse);
         const output = parser(stepResponse.data.response);
+        // setFiles(prev => [...prev, ...output]); // Update files in the context
         setFiles(output); // Update files in the context
         console.log("output from parser: ", output);
 

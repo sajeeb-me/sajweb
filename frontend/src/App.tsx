@@ -20,7 +20,7 @@ function App() {
 
 
   return (
-    <FileSystemProvider>
+    <FileSystemProvider files={files} setFiles={setFiles}>
       <ChatProvider>
         <EditorProvider>
           <div className="h-screen bg-gray-900 text-white overflow-hidden">

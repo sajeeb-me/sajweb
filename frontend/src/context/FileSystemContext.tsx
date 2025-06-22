@@ -91,8 +91,7 @@ createRoot(document.getElementById('root')!).render(
 ];
 
 
-export const FileSystemProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [files, setFiles] = useState<FileItem[]>(initialFiles);
+export const FileSystemProvider: React.FC<{ children: ReactNode, files: FileItem[], setFiles: (files: FileItem[]) => void }> = ({ children, files, setFiles }) => {
   const [currentFile, setCurrentFile] = useState<string | null>('src/App.tsx');
 
   const findFile = (path: string, items: FileItem[] = files): FileItem | null => {
