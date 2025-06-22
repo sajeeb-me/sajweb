@@ -10,54 +10,90 @@ type FolderNode = {
   children: Array<FileNode | FolderNode>;
 };
 
-export function parser(input: string): FolderNode[] {
-  const result: FolderNode[] = [];
-  const srcFolder: FolderNode = {
-    name: 'src',
-    type: 'folder',
-    children: [],
-  };
+// Merge helper
+function mergeTrees(treeA: FolderNode[], treeB: FolderNode[]): FolderNode[] {
+  const map = new Map<string, FileNode | FolderNode>();
 
-  const fileRegex = /<boltAction[^>]*filePath="([^"]+)"[^>]*>\s*([\s\S]*?)<\/boltAction>/g;
+  function addNode(path: string[], node: FileNode | FolderNode) {
+    const key = path.join('/');
 
-  let match: RegExpExecArray | null;
-  while ((match = fileRegex.exec(input)) !== null) {
-    const filePath = match[1]; // e.g., src/components/TodoItem.tsx
-    const content = match[2].trim();
-
-    const pathParts = filePath.split('/');
-    let currentFolder = srcFolder;
-
-    for (let i = 1; i < pathParts.length; i++) {
-      const part = pathParts[i];
-      const isFile = i === pathParts.length - 1;
-
-      if (isFile) {
-        const fileNode: FileNode = {
-          name: part,
-          type: 'file',
-          content,
-        };
-        currentFolder.children.push(fileNode);
-      } else {
-        let nextFolder = currentFolder.children.find(
-          (child): child is FolderNode => child.type === 'folder' && child.name === part
+    if (node.type === 'file') {
+      // Always override file from B if same path exists
+      map.set(key, node);
+    } else {
+      // If folder already exists, merge children
+      const existing = map.get(key);
+      if (existing && existing.type === 'folder') {
+        const mergedChildren = mergeTrees(
+          existing.children as FolderNode[],
+          node.children as FolderNode[]
         );
-
-        if (!nextFolder) {
-          nextFolder = {
-            name: part,
-            type: 'folder',
-            children: [],
-          };
-          currentFolder.children.push(nextFolder);
-        }
-
-        currentFolder = nextFolder;
+        map.set(key, { ...existing, children: mergedChildren });
+      } else {
+        map.set(key, { ...node });
       }
     }
   }
 
-  result.push(srcFolder);
-  return result;
+  function traverseAndAdd(base: FolderNode[], path: string[] = []) {
+    for (const node of base) {
+      const currentPath = [...path, node.name];
+      addNode(currentPath, node);
+
+      if (node.type === 'folder') {
+        traverseAndAdd(node.children as FolderNode[], currentPath);
+      }
+    }
+  }
+
+  traverseAndAdd(treeA);
+  traverseAndAdd(treeB); // B overrides A on conflict
+
+  // Convert the flat map back to nested tree
+  const buildTree = (): FolderNode[] => {
+    const rootMap: Record<string, FolderNode> = {};
+    const roots: FolderNode[] = [];
+
+    for (const [key, node] of map) {
+      const pathParts = key.split('/');
+      if (node.type === 'file') {
+        insertFile(roots, pathParts, node);
+      } else {
+        insertFolder(roots, pathParts);
+      }
+    }
+
+    return roots;
+  };
+
+  function insertFolder(tree: FolderNode[], path: string[]) {
+    let current = tree;
+    for (const part of path) {
+      let folder = current.find((n) => n.name === part && n.type === 'folder') as FolderNode;
+      if (!folder) {
+        folder = { name: part, type: 'folder', children: [] };
+        current.push(folder);
+      }
+      current = folder.children as FolderNode[];
+    }
+  }
+
+  function insertFile(tree: FolderNode[], path: string[], file: FileNode) {
+    const folderPath = path.slice(0, -1);
+    const fileName = path[path.length - 1];
+
+    let current = tree;
+    for (const part of folderPath) {
+      let folder = current.find((n) => n.name === part && n.type === 'folder') as FolderNode;
+      if (!folder) {
+        folder = { name: part, type: 'folder', children: [] };
+        current.push(folder);
+      }
+      current = folder.children as FolderNode[];
+    }
+
+    current.push({ ...file, name: fileName });
+  }
+
+  return buildTree();
 }
